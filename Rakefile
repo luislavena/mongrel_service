@@ -2,199 +2,137 @@
 require 'rubygems'
 gem 'echoe', '>=2.7.11'
 require 'echoe'
+require 'tools/freebasic'
 
-e = Echoe.new("mongrel") do |p|
-  p.summary = "A small fast HTTP library and server that runs Rails, Camping, Nitro and Iowa apps."
-  p.author = "Zed A. Shaw"
-  p.email = "mongrel-development@rubyforge.org"
-  p.clean_pattern = ['ext/http11/*.{bundle,so,o,obj,pdb,lib,def,exp}', 'lib/*.{bundle,so,o,obj,pdb,lib,def,exp}', 'ext/http11/Makefile', 'pkg', 'lib/*.bundle', '*.gem', 'site/output', '.config', 'lib/http11.jar', 'ext/http11_java/classes', 'coverage', 'test_*.log', 'log', 'doc']
-  p.url = "http://mongrel.rubyforge.org"
-  p.rdoc_pattern = ['README', 'LICENSE', 'CONTRIBUTORS', 'CHANGELOG', 'COPYING', 'lib/**/*.rb', 'doc/**/*.rdoc']
-  p.docs_host = 'mongrel.cloudbur.st:/home/eweaver/www/mongrel/htdocs/web'
-  p.ignore_pattern = /^(pkg|site|projects|doc|log)|CVS|\.log/
-  p.ruby_version = '>=1.8.4'
-  p.dependencies = ['gem_plugin >=0.2.3']  
-  p.extension_pattern = nil
-  
-  p.certificate_chain = case (ENV['USER'] || ENV['USERNAME']).downcase
-    when 'eweaver' 
-      ['~/p/configuration/gem_certificates/mongrel/mongrel-public_cert.pem',
-       '~/p/configuration/gem_certificates/evan_weaver-mongrel-public_cert.pem']
-    when 'luislavena', 'luis'
-      ['~/projects/gem_certificates/mongrel-public_cert.pem',
-        '~/projects/gem_certificates/luislavena-mongrel-public_cert.pem']    
-  end
+# Task :package needs compile before doing the gem stuff.
+# (weird behavior of Rake?)
+task :package => [:compile]
+
+echoe_spec = Echoe.new("mongrel_service") do |p|
+  p.summary = "Mongrel Native Win32 Service Plugin for Rails"
+  p.summary += " (debug build)" unless ENV['RELEASE'] 
+  p.description = "This plugin offer native win32 services for rails, powered by Mongrel."
+  p.author = "Luis Lavena"
+  p.email = "luislavena@gmail.com"
+  p.platform = Gem::Platform::CURRENT
+  p.dependencies = [['gem_plugin', '>=0.2.3', '<0.3.0'],
+                    ['mongrel', '>=1.0.2', '<1.2.0'],
+                    ['win32-service', '>=0.5.2', '<0.6.0']]
+
+  p.executable_pattern = ""
   
   p.need_tar_gz = false
-  p.need_tgz = true
-
-  unless Platform.windows? or Platform.java?
-    p.extension_pattern = ["ext/**/extconf.rb"]
-  end
-
-  p.eval = proc do
-    if Platform.windows?
-      self.files += ['lib/http11.so']
-      self.platform = Gem::Platform::CURRENT
-    elsif Platform.java?
-      self.files += ['lib/http11.jar']
-      self.platform = 'jruby' # XXX Is this right?
-    else
-      add_dependency('daemons', '>= 1.0.3')
-    end
-  end
-
+  p.need_zip = true
+  p.certificate_chain = [
+    '~/projects/gem_certificates/mongrel-public_cert.pem',
+    '~/projects/gem_certificates/luislavena-mongrel-public_cert.pem'
+  ]
+  p.require_signed = true
 end
 
-#### Ragel builder
+desc "Compile native code"
+task :compile => [:native_lib, :native_service]
 
-desc "Rebuild the Ragel sources"
-task :ragel do
-  Dir.chdir "ext/http11" do
-    target = "http11_parser.c"
-    File.unlink target if File.exist? target
-    sh "ragel http11_parser.rl -C -G2 -o #{target}"
-    raise "Failed to build C source" unless File.exist? target
+# global options shared by all the project in this Rakefile
+OPTIONS = {
+  :debug => false,
+  :profile => false,
+  :errorchecking => :ex,
+  :mt => true,
+  :pedantic => true }
+
+OPTIONS[:debug] = true if ENV['DEBUG']
+OPTIONS[:profile] = true if ENV['PROFILE']
+OPTIONS[:errorchecking] = :exx if ENV['EXX']
+OPTIONS[:pedantic] = false if ENV['NOPEDANTIC']
+
+# ServiceFB namespace (lib)
+namespace :lib do
+  project_task 'servicefb' do
+    lib       'ServiceFB'
+    build_to  'lib'
+
+    define    'SERVICEFB_DEBUG_LOG' unless ENV['RELEASE'] 
+    source    'lib/ServiceFB/ServiceFB.bas'
+    
+    option    OPTIONS
   end
-  Dir.chdir "ext/http11" do
-    target = "../../ext/http11_java/org/jruby/mongrel/Http11Parser.java"
-    File.unlink target if File.exist? target
-    sh "ragel http11_parser.rl -J -o #{target}"
-    raise "Failed to build Java source" unless File.exist? target
-  end
-end
-
-#### Pre-compiled extensions for alternative platforms
-
-def move_extensions
-  Dir["ext/**/*.#{Config::CONFIG['DLEXT']}"].each { |file| mv file, "lib/" }
-end
-
-def java_classpath_arg
-  # A myriad of ways to discover the JRuby classpath
-  classpath = begin
-    require 'java'
-    # Already running in a JRuby JVM
-    Java::java.lang.System.getProperty('java.class.path')
-  rescue LoadError
-    ENV['JRUBY_PARENT_CLASSPATH'] || ENV['JRUBY_HOME'] && FileList["#{ENV['JRUBY_HOME']}/lib/*.jar"].join(File::PATH_SEPARATOR)
-  end
-  classpath ? "-cp #{classpath}" : ""
-end
-
-if Platform.windows?
-  filename = "lib/http11.so"
-  file filename do
-    Dir.chdir("ext/http11") do
-      ruby "extconf.rb"
-      system(Platform.make)
-    end
-    move_extensions
-  end
-  task :compile => [filename]
-
-elsif Platform.java?
-
-  # Avoid JRuby in-process launching problem
-  begin
-    require 'jruby'
-    JRuby.runtime.instance_config.run_ruby_in_process = false 
-  rescue LoadError
-  end
-
-  filename = "lib/http11.jar"
-  file filename do
-    build_dir = "ext/http11_java/classes"
-    mkdir_p build_dir
-    sources = FileList['ext/http11_java/**/*.java'].join(' ')
-    sh "javac -target 1.4 -source 1.4 -d #{build_dir} #{java_classpath_arg} #{sources}"
-    sh "jar cf lib/http11.jar -C #{build_dir} ."
-    move_extensions
-  end
-  task :compile => [filename]
-
-end
-
-#### Project-wide install and uninstall tasks
-
-def sub_project(project, *targets)
-  targets.each do |target|
-    Dir.chdir "projects/#{project}" do
-      sh("#{Platform.rake} #{target.to_s}") # --trace 
-    end
-  end
-end
-
-desc "Compile all the projects"
-task :compile_all => [:compile] do
-  sub_project("fastthread", :compile)
-  sub_project("mongrel_service", :compile)
-end
-
-desc "Package Mongrel and all subprojects"
-task :package_all => [:package] do
-  sub_project("gem_plugin", :package)
-  sub_project("cgi_multipart_eof_fix", :package)
-  sub_project("fastthread", :package)
-  sub_project("mongrel_status", :package)
-  sub_project("mongrel_upload_progress", :package)
-  sub_project("mongrel_console", :package)
-  sub_project("mongrel_cluster", :package)
-  sub_project("mongrel_experimental", :package)
-
-  sh("rake java package") unless Platform.windows?
   
-  sub_project("mongrel_service", :package) if Platform.windows?
-end
+  project_task 'servicefb_utils' do
+    lib       'ServiceFB_Utils'
+    build_to  'lib'
 
-task :install_requirements do
-  # These run before Mongrel is installed
-  sub_project("gem_plugin", :install)
-  sub_project("cgi_multipart_eof_fix", :install)
-  sub_project("fastthread", :install)
-end
-
-desc "for Mongrel and all subprojects"
-task :install => [:install_requirements] do
-  # These run after Mongrel is installed
-  sub_project("mongrel_status", :install)
-  sub_project("mongrel_upload_progress", :install)
-  sub_project("mongrel_console", :install)
-  sub_project("mongrel_cluster", :install)
-  # sub_project("mongrel_experimental", :install)
-  sub_project("mongrel_service", :install) if Platform.windows?
-end
-
-desc "for Mongrel and all its subprojects"
-task :uninstall => [:clean] do
-  sub_project("mongrel_status", :uninstall)
-  sub_project("cgi_multipart_eof_fix", :uninstall)
-  sub_project("mongrel_upload_progress", :uninstall)
-  sub_project("mongrel_console", :uninstall)
-  sub_project("gem_plugin", :uninstall)
-  sub_project("fastthread", :uninstall)
-  # sub_project("mongrel_experimental", :uninstall)
-  sub_project("mongrel_service", :uninstall) if Platform.windows?
-end
-
-desc "for Mongrel and all its subprojects"
-task :clean_all => [:clean] do
-  sub_project("gem_plugin", :clean)
-  sub_project("cgi_multipart_eof_fix", :clean)
-  sub_project("fastthread", :clean)
-  sub_project("mongrel_status", :clean)
-  sub_project("mongrel_upload_progress", :clean)
-  sub_project("mongrel_console", :clean)
-  sub_project("mongrel_cluster", :clean)
-  sub_project("mongrel_experimental", :clean)
-  sub_project("mongrel_service", :clean) if Platform.windows?
-end
-
-#### Site upload tasks
-
-namespace :site do
-  desc "Upload the coverage report"
-  task :coverage => [:rcov] do
-    sh "rsync -azv --no-perms --no-times test/coverage/* mongrel.cloudbur.st:/home/eweaver/www/mongrel/htdocs/web/coverage" rescue nil
+    define    'SERVICEFB_DEBUG_LOG' unless ENV['RELEASE']
+    source    'lib/ServiceFB/ServiceFB_Utils.bas'
+    
+    option    OPTIONS
   end
 end
+
+# add lib namespace to global tasks
+#include_projects_of :lib
+task :native_lib => "lib:build"
+task :clean => "lib:clobber"
+
+# mongrel_service (native)
+namespace :native do
+  project_task  'mongrel_service' do
+    executable  'mongrel_service'
+    build_to    'bin'
+    
+    define      'DEBUG_LOG' unless ENV['RELEASE']
+    define      "GEM_VERSION=#{echoe_spec.version}"
+    
+    main        'native/mongrel_service.bas'
+    source      'native/console_process.bas'
+    
+    lib_path    'lib'
+    library     'ServiceFB', 'ServiceFB_Utils'
+    library     'user32', 'advapi32', 'psapi'
+    
+    option      OPTIONS
+  end
+end
+
+#include_projects_of :native
+task :native_service => "native:build"
+task :clean => "native:clobber"
+
+project_task :mock_process do
+  executable  :mock_process
+  build_to    'tests'
+  
+  main        'tests/fixtures/mock_process.bas'
+  
+  option      OPTIONS
+end 
+
+task "all_tests:build" => "lib:build"
+project_task :all_tests do
+  executable  :all_tests
+  build_to    'tests'
+  
+  search_path 'src', 'lib', 'native'
+  lib_path    'lib'
+  
+  main        'tests/all_tests.bas'
+  
+  # this temporally fix the inverse namespace ctors of FB
+  source      Dir.glob("tests/test_*.bas").reverse
+  
+  library     'testly'
+  
+  source      'native/console_process.bas'
+  
+  option      OPTIONS
+end
+
+desc "Run all the internal tests for the library"
+task "all_tests:run" => ["mock_process:build", "all_tests:build"] do
+  Dir.chdir('tests') do
+    sh %{all_tests}
+  end
+end
+
+desc "Run all the test for this project"
+task :test => "all_tests:run"
