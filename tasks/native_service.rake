@@ -33,5 +33,8 @@ namespace :native do
   end
 end
 
-task :native_service => [:native_lib, 'native:build']
 task :clean => ['native:clobber']
+task :native_service => [:native_lib, 'native:build']
+
+desc "Compile native code"
+task :compile => [:native_service]
