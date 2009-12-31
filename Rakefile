@@ -1,4 +1,13 @@
+#
+# NOTE: Keep this file clean.
+# Add your customizations inside tasks directory.
+# Thank You.
+#
 
+# load rakefile extensions (tasks)
+Dir['tasks/*.rake'].sort.each { |f| load f }
+
+=begin
 require 'rubygems'
 gem 'echoe', '>=2.7.11'
 require 'echoe'
@@ -136,3 +145,4 @@ end
 
 desc "Run all the test for this project"
 task :test => "all_tests:run"
+=end
