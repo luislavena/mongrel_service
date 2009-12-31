@@ -20,7 +20,7 @@ namespace :native do
     build_to    'bin'
 
     define      'DEBUG_LOG' unless ENV['RELEASE']
-    define      "GEM_VERSION=#{HOE.spec.version}"
+    define      "GEM_VERSION=\"#{HOE.spec.version}\""
 
     main        'src/mongrel_service/mongrel_service.bas'
     source      'src/mongrel_service/console_process.bas'
