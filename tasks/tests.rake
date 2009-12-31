@@ -29,8 +29,8 @@ project_task :all_tests do
   executable  :all_tests
   build_to    'tests'
 
-  search_path 'src', 'lib', 'native'
-  lib_path    'lib'
+  search_path 'src/mongrel_service'
+  lib_path    'builds'
 
   main        'tests/all_tests.bas'
 

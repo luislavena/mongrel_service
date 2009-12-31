@@ -17,20 +17,20 @@ namespace :lib do
 
   project_task 'servicefb' do
     lib       'ServiceFB'
-    build_to  'lib'
+    build_to  'builds'
 
     define    'SERVICEFB_DEBUG_LOG' unless ENV['RELEASE'] 
-    source    'lib/ServiceFB/ServiceFB.bas'
+    source    'src/ServiceFB/ServiceFB.bas'
 
     option    lib_options
   end
 
   project_task 'servicefb_utils' do
     lib       'ServiceFB_Utils'
-    build_to  'lib'
+    build_to  'builds'
 
     define    'SERVICEFB_DEBUG_LOG' unless ENV['RELEASE']
-    source    'lib/ServiceFB/ServiceFB_Utils.bas'
+    source    'src/ServiceFB/ServiceFB_Utils.bas'
 
     option    lib_options
   end

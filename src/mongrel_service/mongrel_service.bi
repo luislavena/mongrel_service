@@ -19,7 +19,7 @@
 '##################################################################
 
 #define SERVICEFB_INCLUDE_UTILS
-#include once "lib/ServiceFB/ServiceFB.bi"
+#include once "ServiceFB.bi"
 #include once "console_process.bi"
 
 '# use for debug versions

@@ -17,7 +17,7 @@ namespace :native do
 
   project_task  'mongrel_service' do
     executable  'mongrel_service'
-    build_to    'bin'
+    build_to    'resources'
 
     define      'DEBUG_LOG' unless ENV['RELEASE']
     define      "GEM_VERSION=\"#{HOE.spec.version}\""
@@ -25,7 +25,9 @@ namespace :native do
     main        'src/mongrel_service/mongrel_service.bas'
     source      'src/mongrel_service/console_process.bas'
 
-    lib_path    'lib'
+    search_path 'src/ServiceFB'
+
+    lib_path    'builds'
     library     'ServiceFB', 'ServiceFB_Utils'
     library     'user32', 'advapi32', 'psapi'
 
