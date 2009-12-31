@@ -1,6 +1,6 @@
 require 'hoe'
 
-Hoe.spec 'mongrel_service' do
+HOE = Hoe.spec 'mongrel_service' do
   self.version = '0.4.0.beta1'
 
   developer 'Luis Lavena', 'luislavena@gmail.com'

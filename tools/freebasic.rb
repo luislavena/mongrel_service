@@ -32,14 +32,11 @@
 #   rake projects:my_fb_project:rebuild # Force a rebuild of the my_fb_project files
 #   rake projects:rebuild               # Rebuild all projects
 
-require 'rake/tasklib'
-require 'pp'
-
 module FreeBASIC
   # this help me reduce the attempts to remove already removed files.
   # works with src_files
   CLOBBER = Rake::FileList.new
-  ON_WINDOWS = (RUBY_PLATFORM =~ /mswin|cygwin|bccwin/)
+  ON_WINDOWS = (RUBY_PLATFORM =~ /mingw|mswin/)
   
   class ProjectTask
     attr_accessor :name
