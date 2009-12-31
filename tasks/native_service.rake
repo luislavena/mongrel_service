@@ -22,8 +22,8 @@ namespace :native do
     define      'DEBUG_LOG' unless ENV['RELEASE']
     define      "GEM_VERSION=#{HOE.spec.version}"
 
-    main        'native/mongrel_service.bas'
-    source      'native/console_process.bas'
+    main        'src/mongrel_service/mongrel_service.bas'
+    source      'src/mongrel_service/console_process.bas'
 
     lib_path    'lib'
     library     'ServiceFB', 'ServiceFB_Utils'
