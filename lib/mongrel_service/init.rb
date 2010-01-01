@@ -95,7 +95,10 @@ module Service
       
       # start using the native executable
       argv << '"' + bindir_executable + '"'
-      
+
+      # force indication of service mode (workaround Windows 2008 psapi issue)
+      argv << "service"
+
       # use the 'single' service for now
       argv << "single"
       

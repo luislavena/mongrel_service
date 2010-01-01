@@ -572,13 +572,14 @@ namespace svc
         idx = 1
         '# first, determine if mode is pressent in commandline, must me command(1)
         temp = lcase(command(idx))
-        
+
         if (temp = "console") or _
-            (temp = "manage") then
+            (temp = "manage") or _
+            (temp = "service") then
             result_mode = temp
             idx += 1
         end if
-        
+
         '# now, check if service name is present
         temp = command(idx)
         

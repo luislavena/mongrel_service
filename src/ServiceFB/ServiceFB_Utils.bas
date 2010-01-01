@@ -109,6 +109,8 @@ namespace utils   '# fb.svc.utils
             elseif (start_mode = "console") then
                 '# start ServiceController.Console()
                 result = RunAsConsole
+            elseif (start_mode = "service") then
+                result = RunAsService
             else
                 '# ok, the first paramenter in the commandline didn't work,
                 '# report back so we could send the banner!

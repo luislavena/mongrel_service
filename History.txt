@@ -4,6 +4,9 @@
   * Wait longer for child process terminate properly (max 20 seconds).
     Imported tests from RubyServices project. (Closes #18).
 
+  * Workaround Windows 2008 process detection issues forcing 'service'
+    initialization parameter. [papillon]
+
   * Updated ServiceFB to work with FB > 0.18.
 
 === 0.3.4 / 2008-01-02
