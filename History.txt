@@ -1,18 +1,18 @@
-=== (in Git)
+=== 0.4.beta1 / 2010-01-01
 
 * Enhancements:
   * Removed win32-service dependency, making mongrel_service more portable
     between Ruby implementations on Windows (One-Click and RubyInstaller)
 
   * Now mongrel log files are written to the path specified by --log option.
-    Contribution by Daniel Gies (BigFix).
+    Contribution by Daniel Gies (BigFix). Closes #44.
 
 * Bugfixes:
   * Wait longer for child process terminate properly (max 20 seconds).
-    Imported tests from RubyServices project. (Closes #18).
+    Imported tests from RubyServices project. Closes #18.
 
   * Workaround Windows 2008 process detection issues forcing 'service'
-    initialization parameter. [papillon]
+    initialization parameter. Closes #54. [papillon]
 
   * Updated ServiceFB to work with FB > 0.18.
 
