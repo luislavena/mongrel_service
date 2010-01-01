@@ -2,6 +2,7 @@ require 'hoe'
 
 # compile takes higher importance in packaging
 task :package => [:compile]
+task :gem => [:compile]
 
 HOE = Hoe.spec 'mongrel_service' do
   self.rubyforge_name = "mongrel"
