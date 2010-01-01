@@ -1,5 +1,6 @@
 History.txt
 lib/mongrel_service/init.rb
+lib/mongrel_service/service_manager.rb
 LICENSE.txt
 Manifest.txt
 Rakefile

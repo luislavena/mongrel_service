@@ -11,7 +11,6 @@ HOE = Hoe.spec 'mongrel_service' do
 
   extra_deps << ['gem_plugin', '~> 0.2.3']
   extra_deps << ['mongrel', '~> 1.1.5']
-  extra_deps << ['win32-service', '~> 0.5.2']
 
   self.need_tar = false
 end

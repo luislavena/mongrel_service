@@ -3,6 +3,7 @@ require 'mongrel'
 require 'mongrel/rails'
 require 'rbconfig'
 require 'fileutils'
+require 'mongrel_service/service_manager'
 
 module Service
   class Install < GemPlugin::Plugin "/commands"
@@ -33,10 +34,6 @@ module Service
     # of the rails application we wanted to serve, because later "as service" no error 
     # show to trace this.
     def validate
-      # TODO: investigate why Win32::Service interfere with gem_plugin
-      gem 'win32-service', '>= 0.5.2', '< 0.6.0'
-      require 'win32/service'
-
       @cwd = File.expand_path(@cwd)
       valid_dir? @cwd, "Invalid path to change to: #@cwd"
   
@@ -77,12 +74,9 @@ module Service
     end
     
     def run
-      gem 'win32-service', '>= 0.5.2', '< 0.6.0'
-      require 'win32/service'
-
       # check if mongrel_service.exe is in ruby bindir.
       gem_root = File.join(File.dirname(__FILE__), "..", "..")
-      gem_executable = File.join(gem_root, "bin/mongrel_service.exe")
+      gem_executable = File.join(gem_root, "resources/mongrel_service.exe")
       bindir_executable = File.join(Config::CONFIG['bindir'], '/mongrel_service.exe')
       
       unless File.exist?(bindir_executable)
@@ -143,21 +137,16 @@ module Service
         argv << "--prefix \"#{@options[:prefix]}\"" if @options[:prefix]
       end
 
-      svc = Win32::Service.new
       begin
-        svc.create_service{ |s|
-          s.service_name     = @svc_name
-          s.display_name     = @svc_display
-          s.binary_path_name = argv.join ' '
-          s.dependencies     = []
-          s.service_type     = Win32::Service::WIN32_OWN_PROCESS
-        }
-        puts "Mongrel service '#{@svc_display}' installed as '#{@svc_name}'."
-      rescue Win32::ServiceError => err
+        ServiceManager.create(
+          @svc_name,
+          @svc_display,
+          argv.join(' ')
+        )
+      rescue ServiceManager::CreateError => e
         puts "There was a problem installing the service:"
-        puts err
+        puts e
       end
-      svc.close
     end
   end
 
@@ -171,13 +160,10 @@ module Service
     def validate
       valid? @svc_name != nil, "A service name is mandatory."
 
-      gem 'win32-service', '>= 0.5.2', '< 0.6.0'
-      require 'win32/service'
-      
       # Validate that the service exists
       begin
-        valid? Win32::Service.exists?(@svc_name), "There is no service with that name, cannot proceed."
-        Win32::Service.open(@svc_name) do |svc|
+        valid? ServiceManager.exists?(@svc_name), "There is no service with that name, cannot proceed."
+        ServiceManager.open(@svc_name) do |svc|
           valid? svc.binary_path_name.include?("mongrel_service"), "The service specified isn't a Mongrel service."
         end
       rescue
@@ -190,22 +176,25 @@ module Service
   class Remove < GemPlugin::Plugin "/commands"
     include Mongrel::Command::Base
     include ServiceValidation
-    
-    def run
-      gem 'win32-service', '>= 0.5.2', '< 0.6.0'
-      require 'win32/service'
 
-      display_name = Win32::Service.getdisplayname(@svc_name)
-      
+    def run
+      display_name = ServiceManager.getdisplayname(@svc_name)
+
       begin
-        Win32::Service.stop(@svc_name)
-      rescue
+        ServiceManager.stop(@svc_name)
+      rescue ServiceManager::ServiceError => e
+        puts e
       end
+
       begin
-        Win32::Service.delete(@svc_name)
-      rescue
+        ServiceManager.delete(@svc_name)
+      rescue ServiceManager::ServiceError => e
+        puts e
       end
-      puts "#{display_name} service removed."
+
+      unless ServiceManager.exist?(@svc_name) then
+        puts "#{display_name} service removed."
+      end
     end
   end
 end
