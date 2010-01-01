@@ -64,8 +64,8 @@ namespace mongrel_service
         '# folder than mongrel_rails ruby script, we complete the path with
         '# EXEPATH + "\mongrel_rails" to make it work.
         '# FIXED ruby installation outside PATH and inside folders with spaces
-        mongrel_cmd = !"\"" + EXEPATH + !"\\ruby.exe" + !"\" " + "-S mongrel_rails start"
-
+        mongrel_cmd = !"\"" + EXEPATH + !"\\ruby.exe" + !"\" " + !"\"" + EXEPATH + !"\\mongrel_rails" + !"\"" + " start"
+        
         '# due lack of inheritance, we use single_mongrel_ref as pointer to 
         '# SingleMongrel instance. now we should call StillAlive
         self.StillAlive()
