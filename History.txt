@@ -4,6 +4,9 @@
   * Removed win32-service dependency, making mongrel_service more portable
     between Ruby implementations on Windows (One-Click and RubyInstaller)
 
+  * Now mongrel log files are written to the path specified by --log option.
+    Contribution by Daniel Gies (BigFix).
+
 * Bugfixes:
   * Wait longer for child process terminate properly (max 20 seconds).
     Imported tests from RubyServices project. (Closes #18).

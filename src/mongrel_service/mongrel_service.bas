@@ -24,8 +24,28 @@
 
 namespace mongrel_service
     constructor SingleMongrel()
-        dim redirect_file as string
-        
+        dim redirect_path as string = EXEPATH
+        dim redirect_file as string = "mongrel.default.log"
+        dim flag as string
+        dim idx as integer = 1
+
+        '# determine supplied logfile
+        flag = command(idx)
+        do while (len(flag) > 0)
+            '# application directory
+            if (flag = "-c") or (flag = "--chdir") then
+                redirect_path = command(idx + 1)
+            end if
+
+            '# log file
+            if (flag = "-l") or (flag = "--log") then
+                redirect_file = command(idx + 1)
+            end if
+            idx += 1
+
+            flag = command(idx)
+        loop
+
         with this.__service
             .name = "single"
             .description = "Mongrel Single Process service"
@@ -40,9 +60,8 @@ namespace mongrel_service
         end with
         
         with this.__console
-            redirect_file = EXEPATH + "\mongrel.log"
-            debug("redirecting to: " + redirect_file)
-            .redirect(ProcessStdBoth, redirect_file)
+            debug("redirecting to: " + redirect_path + "/" + redirect_file)
+            .redirect(ProcessStdBoth, (redirect_path + "/" + redirect_file))
         end with
         
         '# TODO: fix inheritance here
