@@ -19,7 +19,7 @@ namespace :lib do
     lib       'ServiceFB'
     build_to  'builds'
 
-    define    'SERVICEFB_DEBUG_LOG' unless ENV['RELEASE'] 
+    define    'SERVICEFB_DEBUG_LOG' if ENV['LOG']
     source    'src/ServiceFB/ServiceFB.bas'
 
     option    lib_options
@@ -29,7 +29,7 @@ namespace :lib do
     lib       'ServiceFB_Utils'
     build_to  'builds'
 
-    define    'SERVICEFB_DEBUG_LOG' unless ENV['RELEASE']
+    define    'SERVICEFB_DEBUG_LOG' if ENV['LOG']
     source    'src/ServiceFB/ServiceFB_Utils.bas'
 
     option    lib_options

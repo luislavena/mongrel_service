@@ -19,7 +19,7 @@ namespace :native do
     executable  'mongrel_service'
     build_to    'resources'
 
-    define      'DEBUG_LOG' unless ENV['RELEASE']
+    define      'DEBUG_LOG' if ENV['LOG']
     define      "GEM_VERSION=\"#{HOE.spec.version}\""
 
     main        'src/mongrel_service/mongrel_service.bas'
