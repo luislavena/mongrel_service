@@ -1,5 +1,9 @@
 === (in Git)
 
+* Enhancements:
+  * Removed win32-service dependency, making mongrel_service more portable
+    between Ruby implementations on Windows (One-Click and RubyInstaller)
+
 * Bugfixes:
   * Wait longer for child process terminate properly (max 20 seconds).
     Imported tests from RubyServices project. (Closes #18).
