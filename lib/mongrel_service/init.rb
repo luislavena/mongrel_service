@@ -61,7 +61,7 @@ module Service
 
       # We should validate service existance here, right Zed?
       begin
-        valid? !Win32::Service.exists?(@svc_name), "The service already exist, please remove it first."
+        valid? !ServiceManager.exist?(@svc_name), "The service already exist, please remove it first."
       rescue
       end
 
@@ -161,14 +161,13 @@ module Service
       valid? @svc_name != nil, "A service name is mandatory."
 
       # Validate that the service exists
-      begin
-        valid? ServiceManager.exists?(@svc_name), "There is no service with that name, cannot proceed."
+      valid? ServiceManager.exist?(@svc_name), "There is no service with that name, cannot proceed."
+      if @valid then
         ServiceManager.open(@svc_name) do |svc|
           valid? svc.binary_path_name.include?("mongrel_service"), "The service specified isn't a Mongrel service."
         end
-      rescue
       end
-      
+
       return @valid
     end
   end
@@ -183,7 +182,6 @@ module Service
       begin
         ServiceManager.stop(@svc_name)
       rescue ServiceManager::ServiceError => e
-        puts e
       end
 
       begin

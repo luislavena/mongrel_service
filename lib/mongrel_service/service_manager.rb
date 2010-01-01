@@ -9,8 +9,8 @@ module ServiceManager
   def self.create(service_name, display_name, binary_path_name)
     cmd = ['create']
     cmd << service_name
-    cmd << "binPath=" << binary_path_name
     cmd << "DisplayName=" << display_name
+    cmd << "binPath=" << binary_path_name.inspect
     status, out = sc(*cmd)
     raise CreateError.new(out) unless status == 0
 
@@ -23,7 +23,7 @@ module ServiceManager
   end
 
   def self.open(service_name)
-    status, out = sc('qc', service_name)
+    status, out = sc('qc', service_name, 4096)
     raise ServiceNotFound.new(out) unless status == 0
 
     out =~ /BINARY\_PATH\_NAME.*\: (.*)$/
@@ -47,7 +47,7 @@ module ServiceManager
   end
 
   def self.stop(service_name)
-    status, out = sc('stop', service_name)
+    status, out = net('stop', service_name)
     raise ServiceError.new(out) unless status == 0
 
     return true
@@ -64,6 +64,11 @@ module ServiceManager
 
   def self.sc(*args)
     output = `sc #{args.join(' ')} 2>&1`
+    return [$?.exitstatus, output]
+  end
+
+  def self.net(*args)
+    output = `net #{args.join(' ')} 2>&1`
     return [$?.exitstatus, output]
   end
 end
