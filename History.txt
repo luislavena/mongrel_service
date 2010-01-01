@@ -1,4 +1,4 @@
-=== 0.4.beta1 / 2010-01-01
+=== 0.4.beta2 / 2010-01-01
 
 * Enhancements:
   * Removed win32-service dependency, making mongrel_service more portable
