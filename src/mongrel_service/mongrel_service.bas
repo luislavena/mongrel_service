@@ -170,8 +170,8 @@ namespace mongrel_service
     sub application()
         dim simple as SingleMongrel
         dim host as ServiceHost
-        dim ctrl as ServiceController = ServiceController("Mongrel Win32 Service", "version " + VERSION, _
-                                                            "(c) 2006 The Mongrel development team.")
+        dim ctrl as ServiceController = ServiceController("Mongrel Windows Service", "version " + VERSION, _
+                                                            "(c) 2006-2010 The Mongrel development team.")
         
         '# add SingleMongrel (service)
         host.Add(simple.__service)
