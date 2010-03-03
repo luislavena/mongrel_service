@@ -9,7 +9,7 @@ module ServiceManager
   def self.create(service_name, display_name, binary_path_name)
     cmd = ['create']
     cmd << service_name
-    cmd << "DisplayName=" << display_name
+    cmd << "DisplayName=" << display_name.inspect
     cmd << "binPath=" << binary_path_name.inspect
     status, out = sc(*cmd)
     raise CreateError.new(out) unless status == 0
