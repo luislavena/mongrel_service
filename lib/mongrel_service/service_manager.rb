@@ -19,7 +19,7 @@ module ServiceManager
 
   def self.exist?(service_name)
     status, out = sc('query', service_name)
-    status == 0
+    out =~ /#{service_name}/i
   end
 
   def self.open(service_name)
