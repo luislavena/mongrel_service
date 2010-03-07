@@ -39,7 +39,7 @@ project_task :all_tests do
 
   library     'testly'
 
-  source      'native/console_process.bas'
+  source      'src/mongrel_service/console_process.bas'
 
   option      options
 end
