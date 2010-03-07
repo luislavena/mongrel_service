@@ -13,7 +13,6 @@ Use the following commands to get more help:
 
     service::install --help
     service::remove --help
-    service::update --help
 
 == AUTHOR
 
