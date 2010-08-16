@@ -11,8 +11,8 @@ This replace mongrel_rails_service.
 
 Use the following commands to get more help:
 
-    service::install --help
-    service::remove --help
+    mongrel_rails service::install --help
+    mongrel_rails service::remove --help
 
 == AUTHOR
 
