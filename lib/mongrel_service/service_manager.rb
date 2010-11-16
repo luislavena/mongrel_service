@@ -8,7 +8,7 @@ module ServiceManager
 
   def self.create(service_name, display_name, binary_path_name)
     cmd = ['create']
-    cmd << service_name
+    cmd << quote(service_name)
     cmd << "DisplayName=" << display_name.inspect
     cmd << "binPath=" << binary_path_name.inspect
     status, out = sc(*cmd)
@@ -18,12 +18,12 @@ module ServiceManager
   end
 
   def self.exist?(service_name)
-    status, out = sc('query', service_name)
+    status, out = sc('query', quote(service_name))
     out =~ /#{service_name}/i
   end
 
   def self.open(service_name)
-    status, out = sc('qc', service_name, 4096)
+    status, out = sc('qc', quote(service_name), 4096)
     raise ServiceNotFound.new(out) unless status == 0
 
     out =~ /BINARY\_PATH\_NAME.*\: (.*)$/
@@ -39,7 +39,7 @@ module ServiceManager
   end
 
   def self.getdisplayname(service_name)
-    status, out = sc('GetDisplayName', service_name)
+    status, out = sc('GetDisplayName', quote(service_name))
     raise ServiceNotFound.new(out) unless status == 0
 
     out =~ /\=(.*)$/
@@ -47,14 +47,14 @@ module ServiceManager
   end
 
   def self.stop(service_name)
-    status, out = net('stop', service_name)
+    status, out = net('stop', quote(service_name))
     raise ServiceError.new(out) unless status == 0
 
     return true
   end
 
   def self.delete(service_name)
-    status, out = sc('delete', service_name)
+    status, out = sc('delete', quote(service_name))
     raise ServiceError.new(out) unless status == 0
 
     return true
@@ -70,5 +70,9 @@ module ServiceManager
   def self.net(*args)
     output = `net #{args.join(' ')} 2>&1`
     return [$?.exitstatus, output]
+  end
+
+  def self.quote(text)
+    text.inspect
   end
 end
