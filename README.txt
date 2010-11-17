@@ -1,6 +1,6 @@
 = Mongrel Native Win32 Service Plugin
 
-* http://github.com/fauna/mongrel_service
+* http://github.com/luislavena/mongrel_service
 
 == DESCRIPTION
 
