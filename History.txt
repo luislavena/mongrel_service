@@ -1,4 +1,4 @@
-=== (In Git)
+=== 0.4.0 / 2010-11-16
 
 * Enhancements:
   * A bit more verbose messages at install / removal

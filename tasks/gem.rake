@@ -6,7 +6,7 @@ task :gem => [:compile]
 
 HOE = Hoe.spec 'mongrel_service' do
   self.rubyforge_name = "mongrel"
-  self.version = '0.4.beta3'
+  self.version = '0.4.0'
 
   developer 'Luis Lavena', 'luislavena@gmail.com'
 
