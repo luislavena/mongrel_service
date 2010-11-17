@@ -2,6 +2,7 @@
 
 * Bugfixes:
   * Quote service name. Closes GH-3
+  * Loose mongrel dependency a little bit for compatibility
 
 === 0.4.beta3 / 2010-03-07
 
