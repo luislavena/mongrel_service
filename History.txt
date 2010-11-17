@@ -1,6 +1,7 @@
 === 0.4.0 / 2010-11-16
 
 * Enhancements:
+  * Pass-through arguments during service install. Closes GH-4
   * A bit more verbose messages at install / removal
 
 * Bugfixes:

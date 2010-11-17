@@ -135,6 +135,9 @@ module Service
         argv << "--prefix \"#{@options[:prefix]}\"" if @options[:prefix]
       end
 
+      # concat remaining non-parsed ARGV
+      argv.concat(ARGV)
+
       begin
         ServiceManager.create(
           @svc_name,
