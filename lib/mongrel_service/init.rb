@@ -8,7 +8,7 @@ require 'mongrel_service/service_manager'
 module Service
   class Install < GemPlugin::Plugin "/commands"
     include Mongrel::Command::Base
-  
+
     def configure
         options [
           ['-N', '--name SVC_NAME', "Required name for the service to be registered/installed.", :@svc_name, nil],
@@ -29,17 +29,23 @@ module Service
           ['', '--prefix PATH', "URL prefix for Rails app", :@prefix, nil]
         ]
     end
-    
+
     # When we validate the options, we need to make sure the --root is actually RAILS_ROOT
-    # of the rails application we wanted to serve, because later "as service" no error 
+    # of the rails application we wanted to serve, because later "as service" no error
     # show to trace this.
     def validate
       @cwd = File.expand_path(@cwd)
       valid_dir? @cwd, "Invalid path to change to: #@cwd"
-  
+
       # change there to start, then we'll have to come back after daemonize
       Dir.chdir(@cwd)
-  
+
+      valid? @svc_name != nil, "A service name is mandatory."
+      valid? !ServiceManager.exist?(@svc_name), "The service already exist, please remove it first."
+
+      # default service display to service name
+      @svc_display = @svc_name if !@svc_display
+
       # start with the premise of app really exist.
       app_exist = true
       %w{app config log}.each do |path|
@@ -59,40 +65,29 @@ module Service
       valid_exists? @mime_map, "MIME mapping file does not exist: #@mime_map" if @mime_map
       valid_exists? @config_file, "Config file not there: #@config_file" if @config_file
 
-      # We should validate service existance here, right Zed?
-      begin
-        valid? !ServiceManager.exist?(@svc_name), "The service already exist, please remove it first."
-      rescue
-      end
-
-      valid? @svc_name != nil, "A service name is mandatory."
-      
-      # default service display to service name
-      @svc_display = @svc_name if !@svc_display
-
       return @valid
     end
-    
+
     def run
       # check if mongrel_service.exe is in ruby bindir.
       gem_root = File.join(File.dirname(__FILE__), "..", "..")
       gem_executable = File.join(gem_root, "resources/mongrel_service.exe")
       bindir_executable = File.join(Config::CONFIG['bindir'], '/mongrel_service.exe')
-      
+
       unless File.exist?(bindir_executable)
         STDERR.puts "** Copying native mongrel_service executable..."
         FileUtils.cp gem_executable, bindir_executable rescue nil
       end
-      
+
       unless FileUtils.compare_file(bindir_executable, gem_executable)
         STDERR.puts "** Updating native mongrel_service executable..."
         FileUtils.rm_f bindir_executable rescue nil
         FileUtils.cp gem_executable, bindir_executable rescue nil
       end
-      
+
       # build the command line
       argv = []
-      
+
       # start using the native executable
       argv << '"' + bindir_executable + '"'
 
@@ -101,7 +96,7 @@ module Service
 
       # use the 'single' service for now
       argv << "single"
-      
+
       # command line setting override config file settings
       @options = { :host => @address,  :port => @port, :cwd => @cwd,
         :log_file => @log_file, :pid_file => @pid_file, :environment => @environment,
@@ -109,15 +104,15 @@ module Service
         :debug => @debug, :includes => ["mongrel"], :config_script => @config_script,
         :num_procs => @num_procs, :timeout => @timeout, :cpu => @cpu, :prefix => @prefix
       }
-      
+
       # if we are using a config file, pass -c and -C to the service instead of each start parameter.
       if @config_file
         STDERR.puts "** Using #{@config_file} instead of command line parameters."
         conf = YAML.load_file(@config_file)
-        
+
         # add the root folder (-c)
         argv << "-c \"#{conf[:cwd]}\""
-        
+
         # use the config file
         argv << "-C \"#{@config_file}\""
 
@@ -159,7 +154,7 @@ module Service
         ['-N', '--name SVC_NAME', "Required name for the service to be registered/installed.", :@svc_name, nil],
       ]
     end
-    
+
     def validate
       valid? @svc_name != nil, "A service name is mandatory."
 
@@ -174,7 +169,7 @@ module Service
       return @valid
     end
   end
-  
+
   class Remove < GemPlugin::Plugin "/commands"
     include Mongrel::Command::Base
     include ServiceValidation
