@@ -1,5 +1,8 @@
 === (In Git)
 
+* Enhancements:
+  * A bit more verbose messages at install / removal
+
 * Bugfixes:
   * Quote service name. Closes GH-3
   * Loose mongrel dependency a little bit for compatibility

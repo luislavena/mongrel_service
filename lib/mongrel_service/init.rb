@@ -141,6 +141,7 @@ module Service
           @svc_display,
           argv.join(' ')
         )
+        puts "#{@svc_display} service created."
       rescue ServiceManager::CreateError => e
         puts "There was a problem installing the service:"
         puts e
@@ -178,6 +179,7 @@ module Service
       display_name = ServiceManager.getdisplayname(@svc_name)
 
       begin
+        puts "Stopping #{display_name} if running..."
         ServiceManager.stop(@svc_name)
       rescue ServiceManager::ServiceError => e
       end
